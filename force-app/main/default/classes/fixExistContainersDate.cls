@@ -3,9 +3,6 @@ public class fixExistContainersDate implements Database.Batchable<SObject>{
     public Database.QueryLocator start(Database.BatchableContext bc){
         
 		String query = 'SELECT Id'
-            		 + ', (SELECT CreatedDate'
-            		 + '   FROM Invoices__r'
-            		 + '   WHERE Name LIKE \'Batch%\')'
         			 + ' FROM Container__c'
             		 + ' WHERE Name LIKE \'Batch%\'';
         
@@ -15,11 +12,39 @@ public class fixExistContainersDate implements Database.Batchable<SObject>{
 
 	public void execute(Database.BatchableContext bs, List<Container__c> scope){
         
+        List<ContainerInvoice__c> cntrInvs = [SELECT Id
+                                       		   , CreatedDate
+                                          	   , Container__c
+                                  		  FROM ContainerInvoice__c
+                                  		  WHERE Container__c IN : scope
+                                          ORDER BY Container__c];
+        
+        Map<Id,List<ContainerInvoice__c>> cntrIdToListCntrInvs = new Map<Id,List<ContainerInvoice__c>>();
+        Id currentCntrId;
+        List<ContainerInvoice__c> currentListCntrInv = new List<ContainerInvoice__c>();
+        for(ContainerInvoice__c cntrInv_i : cntrInvs){
+            if(currentCntrId == null
+              || currentCntrId != cntrInv_i.Container__c){
+                if(!currentListCntrInv.isEmpty()){
+                	cntrIdToListCntrInvs.put(currentCntrId, currentListCntrInv);      
+                }               
+				currentCntrId = cntrInv_i.Container__c;
+                currentListCntrInv.clear();
+            }
+            currentListCntrInv.add(cntrInv_i);
+        }
+        
         Map<Id,Container__c> cntrToUpdate = new Map<Id,Container__c>();
         for (Container__c cntr_i : scope) {
             
+            List<ContainerInvoice__c> childListCntrInv = cntrIdToListCntrInvs.get(cntr_i.Id);
+            if(childListCntrInv == null) {
+                continue;
+            }
+            
             Datetime currentMaxDate;
-            for(ContainerInvoice__c cntrInv_j : cntr_i.Invoices__r) {
+            Datetime currentContainer;
+            for(ContainerInvoice__c cntrInv_j : childListCntrInv) {
 				if (currentMaxDate == Null || cntrInv_j.CreatedDate > currentMaxDate) {
 					currentMaxDate = cntrInv_j.CreatedDate;                        
 				}
