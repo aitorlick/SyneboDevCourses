@@ -9,10 +9,10 @@ public class AnimalsQueueableCallouts implements Queueable, Database.AllowsCallo
     
         List<Animal__c> animalsListToProcessing = new List<Animal__c>();
         for (Integer i = 0; i < 100; i++) {
-            Animal__c currentAnimal = animalsList.get(0);
-            if(currentAnimal == null){
+            if (!animalsList.isEmpty()) {
                 break;
             }
+            Animal__c currentAnimal = animalsList.get(0);
             animalsListToProcessing.add(currentAnimal);
             animalsList.remove(0);
         }
@@ -25,8 +25,6 @@ public class AnimalsQueueableCallouts implements Queueable, Database.AllowsCallo
                 continue;
             }
             AnimalFromJSON animalFJ = AnimalFromJSON.parse(response.getBody());
-            System.debug(animal_i.External_Id__c);
-            System.debug(animalFJ);
             if (animalFJ.animal == null || 
                 animalFJ.animal.id == null ||
                 animalFJ.animal.id == 0) {

@@ -10,9 +10,7 @@ public class AnimalTRDispatcher {
                                    WHERE Id IN : newList];
         List<Animal__c> animalsListToProcessing = new List<Animal__c>();
         for(Animal__c animal_i : animalsList) {
-            if (String.isBlank(animal_i.External_Id__c)) {
-            	animal_i.addError('External Id must be filled!');
-			} else {
+            if (!String.isBlank(animal_i.External_Id__c)) {
                 animalsListToProcessing.add(animal_i);
             }
 		}

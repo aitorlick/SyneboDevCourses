@@ -18,8 +18,7 @@ global class fixAnimalsBatch implements Database.Batchable<SObject>, schedulable
         
         List<Animal__c> animalsListToUpdate = new List<Animal__c>();
         for (Animal__c animal_i : scope) {
-            String cacheNameAnimal = 'Animal'+(String)animal_i.Id;
-            AnimalFromJSON animalFJ = (AnimalFromJSON)Cache.org.get(cacheNameAnimal);
+            AnimalFromJSON animalFJ = AnimalsCache.getAnimalFromJSON(animal_i.External_Id__c);
             if (animalFJ == null || animalFJ.animal == null) {
                 HttpResponse response = AnimalsCallouts.makeGetCallout(animal_i.External_Id__c);
                 if (response.getStatusCode() != 200) {
@@ -33,7 +32,7 @@ global class fixAnimalsBatch implements Database.Batchable<SObject>, schedulable
                     System.debug('Failed to get additional fields of Animal with Id: '+animal_i.Id);
                     continue;
                 }
-                Cache.Org.put(cacheNameAnimal, animalFJ, 172800);
+                AnimalsCache.putAnimalFromJSONToCache(animal_i.External_Id__c, animalFJ);
             }
             AnimalUtil.compareUpdateFieldsAndPutInMapToUpdate(animal_i, animalFJ, animalsListToUpdate);                
         }
