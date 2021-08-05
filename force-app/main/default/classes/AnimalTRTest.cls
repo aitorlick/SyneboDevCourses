@@ -6,7 +6,7 @@ public class AnimalTRTest {
    
         Test.startTest();
         
-		TestDataFactory.createAnimals(100);
+		TestDataFactory.createAnimals(200);
         
         Test.stopTest();
         

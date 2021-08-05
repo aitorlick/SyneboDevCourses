@@ -1,0 +1,30 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" controller="AnimalController" access="global">
+    <aura:attribute name="searchResultVisible" type="Boolean" default="false"/>    
+    <aura:attribute name="animalId" type="String"/>    
+    <aura:attribute type="Object[]" name="animalList"/>
+    <aura:attribute name="animalColumns" type="List"/>
+   
+    <div class="slds-input-has-icon slds-input-has-icon--right slds-align_absolute-center">
+        <lightning:buttonIcon iconName="utility:search" variant="bare" onclick="{! c.fillAnimalDataTable }" alternativeText="Search" class="slds-input__icon" />
+  		<lightning:input type="text" name="animalId" placeholder="Fill animal Id…" class="slds-input" variant="label-hidden" value="{!v.animalId}"/>
+    </div>
+
+	<aura:if isTrue="{!v.searchResultVisible}">    
+        <lightning:layout class="slds-p-around_x-small">
+            
+            <aura:if isTrue="{!not(empty(v.animalList))}">
+                <lightning:datatable data="{!v.animalList }"
+                                 columns="{!v.animalColumns }"
+                                 keyField="animalTable"
+                                 hideCheckboxColumn="true"/>
+            <aura:set attribute="else">
+                <lightning:layout class="slds-align_absolute-center">
+                    <aura:text value="No animals found"/>
+                </lightning:layout>            
+            </aura:set>
+            </aura:if>
+            
+        </lightning:layout>
+	</aura:if>
+    
+</aura:component>
