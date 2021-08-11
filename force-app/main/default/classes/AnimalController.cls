@@ -55,5 +55,25 @@ public with sharing class AnimalController {
 
         }
     }
+
+    @AuraEnabled
+    public static String getExistAnimal(Animal__c animal) {
+
+        List<Animal__c> animalsList = [SELECT Id
+                                  		, Name
+                                   		, Eats__c
+                                   		, Says__c
+                                   		, External_Id__c
+                                   FROM Animal__c
+                                   WHERE External_Id__c =: animal.External_Id__c
+                                   LIMIT 1];
+
+        String result;                                   
+        if (!animalsList.isEmpty()) {
+            result = (String) animalsList.get(0).Id;
+        }
+        return result;    
+
+    }
     
 }

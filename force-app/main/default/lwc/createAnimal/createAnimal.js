@@ -5,8 +5,11 @@ import EXTERNAL_ID_FIELD from '@salesforce/schema/Animal__c.External_Id__c';
 import EATS_FIELD from '@salesforce/schema/Animal__c.Eats__c';
 import SAYS_FIELD from '@salesforce/schema/Animal__c.Says__c';
 import createAnimalServer from '@salesforce/apex/AnimalController.createAnimal';
+import getExistAnimal from '@salesforce/apex/AnimalController.getExistAnimal';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-export default class createAnimal extends LightningElement {
+import { NavigationMixin } from 'lightning/navigation';
+import { encodeDefaultFieldValues } from 'lightning/pageReferenceUtils';
+export default class createAnimal extends NavigationMixin(LightningElement) {
 
     @track isModalOpen = false;
     @track updateAnimalWithoutQuestions = false;
@@ -49,22 +52,40 @@ export default class createAnimal extends LightningElement {
         this.rec.Says__c = event.target.value;
     }
     handleClick() {
-        console.log(this.rec);
-        createAnimalServer({ animal : this.rec, updateAnimalWithoutQuestions : this.updateAnimalWithoutQuestions})
+        getExistAnimal({ animal : this.rec})
             .then(result => {
                 this.message = result;
                 this.error = undefined;
                 if(this.message !== undefined) {
-                    
-                    if(this.message === null) {
-                        this.isModalOpen = true;
+                    console.log(this.message);
+                    console.log(typeof this.message);
+                    if(this.message !== null) {
+                        this[NavigationMixin.Navigate]({
+                            type: 'standard__objectPage',
+                            attributes: {
+                                recordId: this.message,
+                                objectApiName: 'Animal__c',
+                                actionName: 'edit'
+                            }
+                        });
+                        console.log('edit');
                     } else {
-                        this.rec.Name = '';
-                        this.rec.External_Id__c = '';
-                        this.rec.Eats__c = '';
-                        this.rec.Says__c = '';
-                        
-                        if(this.updateAnimalWithoutQuestions === true) {
+
+                        console.log(this.rec);
+                        const defaultValues = encodeDefaultFieldValues(this.rec);
+
+                        this[NavigationMixin.Navigate]({
+                            type: 'standard__objectPage',
+                            attributes: {
+                                objectApiName: 'Animal__c',
+                                actionName: 'new'
+                            },
+                            state: {
+                                defaultFieldValues: defaultValues
+                            }
+                        });
+                        console.log('new');
+                        /* if(this.updateAnimalWithoutQuestions === true) {
                             this.dispatchEvent(
                                 new ShowToastEvent({
                                     title: 'Success',
@@ -80,9 +101,52 @@ export default class createAnimal extends LightningElement {
                                     variant: 'success',
                                 }),
                             );
-                        }
+                        } */
                         
                         this.updateAnimalWithoutQuestions = false;
+                    }
+        
+                }
+                
+                console.log(JSON.stringify(result));
+                console.log("result", this.message);
+            })
+            .catch(error => {
+                this.message = undefined;
+                this.error = error;
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error creating / updating record',
+                        message: error.body.message,
+                        variant: 'error',
+                    }),
+                );
+                console.log("error", JSON.stringify(this.error));
+            });
+    } 
+
+    handleClickOpen() {
+        getExistAnimal({ animal : this.rec})
+            .then(result => {
+                this.message = result;
+                this.error = undefined;
+                if(this.message !== undefined) {
+                    if(this.message !== null) {
+                        this[NavigationMixin.Navigate]({
+                            type: 'standard__recordPage',
+                            attributes: {
+                                recordId: this.message,
+                                actionName: 'view'
+                            }
+                        });                        
+                    } else {
+                        this.dispatchEvent(
+                            new ShowToastEvent({
+                                title: 'Error open record',
+                                message: 'Object doesnt exist in current base',
+                                variant: 'error',
+                            }),
+                        );
                     }
         
                 }
